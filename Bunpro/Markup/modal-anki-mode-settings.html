@@ -1,0 +1,82 @@
+<div class="bp-h-screen fixed inset-0 z-modal" id="anki-settings-modal" style="opacity: 1; display: block;">
+    <button aria-label="Close menu" class="anki-settings-close absolute inset-0 z-1 h-full w-full bg-modal-bg opacity-40"></button>
+    <article style="display: inline-table;" class="bp-modal-container bg-secondary-bg">
+        <div class="relative z-1 flex w-full flex-grow flex-col gap-24 p-24 sm:h-full">
+            <article class="grid gap-24 text-secondary-fg sm:grid-cols-2 sm:gap-x-12">
+                <section class="sm:col-span-2">
+                    <h2 class="mb-8 flex items-center gap-8 font-bold text-primary-fg">
+                        <span>ANKO!</span>
+                        <input type="checkbox" id="anki-settings-toggle" class="anki-settings-toggles" checked="">
+                        <ul class="inline-flex overflow-hidden rounded border border-primary-accent ">
+                          <li class="group">
+                             <button id="anki-settings-toggle-off" class="border-r border-primary-accent px-12 py-6 group-last:border-none text-primary-accent">Off</button>
+                          </li>
+                         <li class="group">
+                             <button id="anki-settings-toggle-on" class="border-r border-primary-accent px-12 py-6 group-last:border-none text-secondary-bg bg-primary-accent">On</button>
+                         </li>
+                    </ul>
+                    </h2>
+                    <div class="sm:flex sm:gap-12">
+                        <ul class="grid h-fit gap-8 sm:w-1/2">
+                            <!--<li class="rounded bg-primary-bg px-12 py-8 text-small sm:py-10">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center justify-center gap-6">
+                                        <p>Auto Next On Unknown</p><svg viewBox="0 0 24 24"
+                                            xmlns="http://www.w3.org/2000/svg" class="h-24 w-24 undefined">
+                                            <path
+                                                d="m3.4 20.4 17.45-7.48a1 1 0 0 0 0-1.84L3.4 3.6a.993.993 0 0 0-1.39.91L2 9.12c0 .5.37.93.87.99L17 12 2.87 13.88c-.5.07-.87.5-.87 1l.01 4.61c0 .71.73 1.2 1.39.91Z"
+                                                fill="currentColor"></path>
+                                        </svg>
+                                    </div><input type="checkbox" id="anki-settings-unknown-auto-next" class="anki-settings-toggles" checked>
+                                </div>
+                            </li>-->
+                            <!--<li class="rounded bg-primary-bg px-12 py-8 text-small sm:py-10">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center justify-center gap-6">
+                                        <p>Countdown seconds</p>
+                                    </div><select id="anki-settings-unknown-countdown" class="anki-settings-toggles">
+                                        <option value="1">1</option>
+                                        <option value="2">2</option>
+                                        <option value="3" selected>3</option>
+                                        <option value="4">4</option>
+                                        <option value="5">5</option>
+                                    </select>
+                                </div>
+                            </li>-->
+                        </ul>
+                        <ul class="grid h-fit gap-8 sm:w-1/2">
+                            <!--<li class="rounded bg-primary-bg px-12 py-8 text-small sm:py-10">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center justify-center gap-6">
+                                        <p>Auto Next On Known</p><svg viewBox="0 0 24 24"
+                                            xmlns="http://www.w3.org/2000/svg" class="h-24 w-24 undefined">
+                                            <path
+                                                d="m3.4 20.4 17.45-7.48a1 1 0 0 0 0-1.84L3.4 3.6a.993.993 0 0 0-1.39.91L2 9.12c0 .5.37.93.87.99L17 12 2.87 13.88c-.5.07-.87.5-.87 1l.01 4.61c0 .71.73 1.2 1.39.91Z"
+                                                fill="currentColor"></path>
+                                        </svg>
+                                    </div><input type="checkbox" id="anki-settings-known-auto-next" class="anki-settings-toggles" checked>
+                                </div>
+                            </li>-->
+                            <!--<li class="rounded bg-primary-bg px-12 py-8 text-small sm:py-10">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center justify-center gap-6">
+                                        <p>Countdown seconds</p>
+                                    </div><select id="anki-settings-known-countdown" class="anki-settings-toggles">
+                                        <option value="1">1</option>
+                                        <option value="2">2</option>
+                                        <option value="3" selected>3</option>
+                                        <option value="4">4</option>
+                                        <option value="5">5</option>
+                                    </select>
+                                </div>
+                            </li>-->
+                        </ul>
+                    </div>
+                </section>
+            </article>
+        </div>
+        <footer id="floating-portal-modal-footer" class="sticky bottom-0 left-0 right-0 z-2">
+        <span class="text-center"><p class="order-2 text-detail font-bold text-secondary-fg md:order-1 md:justify-self-start">Bringing Anki goodness into Bunpro goodness</p></span>
+<span class="text-center"><p class="order-2 text-detail font-bold text-secondary-fg md:order-1 md:justify-self-start pad-bt-5">๑(◕‿◕)๑ Michael Cheung 2023 V1.0 ٩(＾◡＾)۶</p></span></footer>
+    </article>
+</div>
