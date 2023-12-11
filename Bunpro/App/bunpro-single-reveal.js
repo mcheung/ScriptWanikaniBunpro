@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name         HANKO! Bunpro with Hangman Text Reveals
+// @name         HANKO! Bunpro with Hangman Style Single Text Reveals
 // @namespace    michael.cheung
 // @version      1.0
-// @description  Configure the Bunpro UI with 'Hangman', single character answer reveals
+// @description  Configure the Bunpro UI with 'Hangman' style single character at a time answer reveals
 // @author       Michael Cheung
 // @match        https://bunpro.jp/reviews*
 // @grant        none
@@ -61,6 +61,7 @@ let _ankoEnabled = true;
 let _hankoEnabled = true;
 let _numCharactersRevealed = 0;
 let _answerRevealed = false;
+let _showAllWasClicked = false;
 
 /* -------------------------------------------------------
    Configure keyboard buttons to trigger the UI
@@ -134,7 +135,7 @@ function setupKeyboardTriggers(){
 
 
 /* -------------------------------------------------------
-   Display the 'Show answer' button only
+   Display the 'Show answer' button
 * ------------------------------------------------------ */
 function resetAnkiQuiz(){
     const quizConsole = document.querySelector('.' + elQuizConsole);
@@ -153,10 +154,8 @@ function resetAnkiQuiz(){
         ankiButtonsSection.style.opacity = '1';
         nextBtn.style.display = 'none';
     }
-    if(_hankoEnabled){
-        show1Btn.style.display = 'inline-block';
-    }
     enableButtons();
+	_showAllWasClicked = false;
 }
 
 /* -------------------------------------------------------
@@ -189,11 +188,13 @@ function setAnkiQuiz(){
 }
 
 function setHankoButton(){
-    const show1Answer = document.querySelector('#' + elShow1Answer);
-    show1Answer.style.display = 'inline-block';
-    show1Answer.style.visbility = 'visible';
-    show1Answer.style.opacity = 1.0;
-    show1Answer.enabled = true;
+	if(_hankoEnabled){
+		const show1Answer = document.querySelector('#' + elShow1Answer);
+		show1Answer.style.display = 'inline-block';
+		show1Answer.style.visbility = 'visible';
+		show1Answer.style.opacity = 1.0;
+		show1Answer.enabled = true;
+	}
 }
 
 /* -------------------------------------------------------
@@ -202,11 +203,13 @@ function setHankoButton(){
 function showNextButton(){
     const quizConsole = document.querySelector('.' + elQuizConsole);
     const showBtn = document.querySelector('#' + elShowAnswer);
+    const show1Btn = document.querySelector('#' + elShow1Answer);
     const knowBtn = document.querySelector('#' + elKnown);
     const unknownBtn = document.querySelector('#' + elUnknown);
     const nextBtn = document.querySelector('#' + elNext);
 
     showBtn.style.display = 'none';
+    show1Btn.style.display = 'none';
     knowBtn.style.display = 'none';
     unknownBtn.style.display = 'none';
     nextBtn.style.display = 'inline-block';
@@ -326,8 +329,17 @@ function setUpAnkoUI() {
      * -------------------------------------------------------*/
 	const submitButton = document.querySelector('.' + elSubmitButton);
     submitButton.addEventListener('click', function () {
-		if(_ankoEnabled){
+		if(_ankoEnabled || _hankoEnabled){
 			answerBox.disabled = true;
+			/* --------------------------------------------------------
+				Hide the toast element for notifications
+			* -------------------------------------------------------*/
+			setTimeout(function () {
+				const toastElement = document.querySelector(".z-tooltip");
+				if (toastElement) {
+					toastElement.style.visibility = "hidden";
+				}
+			}, 10);
 		}
     });
     submitButton.style.visibility = "hidden";
@@ -374,6 +386,8 @@ function setUpAnkoUI() {
         The Anki 'Show answer' button
      * -------------------------------------------------------*/
     const showAnswer = document.querySelector("#" + elShowAnswer);
+	_showAllWasClicked = true;
+
     showAnswer.addEventListener('click', function () {
 
         if(_ankoEnabled) {
@@ -382,7 +396,7 @@ function setUpAnkoUI() {
     }, false);
 
     /* --------------------------------------------------------
-        The Anki 'Show 1 answer' button
+        The 'Show 1 answer' button
      * -------------------------------------------------------*/
     const show1Answer = document.querySelector("#" + elShow1Answer);
     const manualInput = document.querySelector("#" + elManualInput);
@@ -403,11 +417,13 @@ function setUpAnkoUI() {
     const observer = new MutationObserver(() => {
         if(_ankoEnabled || _hankoEnabled) {
 			resetAnkiQuiz();
+			setHankoButton()
 		}
     });
     observer.observe(remaining, { subtree: true, childList: true, characterData: true });
 
     resetAnkiQuiz();
+	setHankoButton();
 }
 
 function toggleAnko(enabled){
@@ -430,6 +446,7 @@ function toggleAnko(enabled){
         showAnswer.style.display = 'inline-block';
 
         ankiButtons.display = 'grid';
+		submitButton.style.visibility = "hidden";
     }else{
         _ankoEnabled = false;
         answerBox.disabled = false;
@@ -477,16 +494,10 @@ function displayAnswer() {
     /* --------------------------------------------------------
         Get the quiz answers and sanitise them
     * -------------------------------------------------------*/
-    const quizElement = document.querySelector("#" + elQuizElement);
-    const answers = quizElement.getAttribute('data-meta-answers-array');
     const answerDisplay = document.querySelector("." + elAnswerDisplay);
     const answerDisplayBtn = answerDisplay.querySelector('button');
 
-    let answer = answers.split(',')[0];
-    answer = answer.replace('"', '');
-    answer = answer.replace('[', '');
-    answer = answer.replace(']', '');
-    answer = answer.replace('"', '');
+    let answer = getAnswer();
 
     /* --------------------------------------------------------
        Display the quiz answer
@@ -543,13 +554,15 @@ function display1Answer() {
     const answerDisplayBtn = answerDisplay.querySelector('button');
 
     let partialAnswer = "";
+    let partialAnswerPlusTrailing = "";
     for(var i in answer){
 
         if(i <= _numCharactersRevealed){
             partialAnswer += answer[i];
+            partialAnswerPlusTrailing += answer[i];
         }
         else{
-            partialAnswer += "_";
+            partialAnswerPlusTrailing += "_";
         }
     }
 
@@ -558,7 +571,7 @@ function display1Answer() {
     if(_numCharactersRevealed >= answer.length){
         setAnswerHasBeenRevealed();
     }
-    answerDisplayBtn.innerHTML = '<span class=\"inline-block   text-correct\">' + partialAnswer + '</span>';
+    answerDisplayBtn.innerHTML = '<span class=\"inline-block   text-correct\">' + partialAnswerPlusTrailing + '</span>';
 
     /* --------------------------------------------------------
        Hide the toast element for notifications
@@ -574,9 +587,9 @@ function display1Answer() {
     manualInput.value = partialAnswer;
     manualInput.focus();
 
-    /* ----------------------------------------------------------
-                Set the answer in the react generated input
-             * -------------------------------------------------------- */
+    	/* ----------------------------------------------------------
+		   Set the answer in the react generated input
+		* -------------------------------------------------------- */
         const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
             window.HTMLInputElement.prototype,
             "value"
@@ -657,8 +670,8 @@ function submitKnown(){
     ankiKnow.style.fontSize = '1.2rem';
 
     /* --------------------------------------------------------
-            Get the quiz answers and sanitise them
-        * -------------------------------------------------------*/
+		Get the quiz answers and sanitise them
+	* -------------------------------------------------------*/
     const quizElement = document.querySelector("#" + elQuizElement);
     const answers = quizElement.getAttribute('data-meta-answers-array');
     //const answerDisplay = document.querySelector(".bp-quiz-tense");
@@ -672,8 +685,8 @@ function submitKnown(){
     setTimeout(function () {
 
         /* ----------------------------------------------------------
-                Set the answer in the react generated input
-             * -------------------------------------------------------- */
+			Set the answer in the react generated input
+		* -------------------------------------------------------- */
         const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
             window.HTMLInputElement.prototype,
             "value"
@@ -683,9 +696,9 @@ function submitKnown(){
         answerBox.dispatchEvent(inputEvent);
 
         /* --------------------------------------------------------
-               Hide the toast element for notifications
-               (appears when keys are pressed)
-            * -------------------------------------------------------*/
+			Hide the toast element for notifications
+			(appears when keys are pressed)
+		* -------------------------------------------------------*/
         const toastElement = document.querySelector(".z-tooltip");
         if (toastElement) {
             toastElement.style.visibility = "hidden";
@@ -694,8 +707,8 @@ function submitKnown(){
 
 
     /* ----------------------------------------------------------
-           Submit the answer after a couple of seconds
-        * -------------------------------------------------------- */
+		Submit the answer after a couple of seconds
+	* -------------------------------------------------------- */
 
 	const submitButton = document.querySelector('.' + elSubmitButton);
     setTimeout(function () {
@@ -712,7 +725,22 @@ function submitUnknown(){
     setTimeout(function () {
         showNextButton();
     }, 10);
-    submitButton.click();
+	
+	/* ----------------------------------------------------------
+		Set the blank answer in the react generated input
+	* -------------------------------------------------------- */
+    const manualInput = document.querySelector("#" + elManualInput);
+	const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
+		window.HTMLInputElement.prototype,
+		"value"
+	).set;
+	nativeInputValueSetter.call(manualInput, "る");
+	const inputEvent = new Event("input", { bubbles: true });
+	manualInput.dispatchEvent(inputEvent);
+
+	if(_showAllWasClicked){
+		submitButton.click();
+	}
 
     /* --------------------------------------------------------
        Hide the toast element for notifications
@@ -824,7 +852,7 @@ const ankiButtonsHtml =
          <div class="row">
 
          <button id="`+ elShowAnswer +`" class="w-1/3" title="Reveal the full answer"><span class="justify-center items-center rounded flex text-primary-contrast bg-secondary-accent border-secondary-accent shadow text-body border min-h-button-min-height px-12 py-8">
-         <span class="text-right">Show all</span>
+         <span class="text-right">Show</span>
          <span class="ml-6">
              <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" width="24" height="24" class="undefined"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5ZM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5Zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3Z" fill="currentColor"></path></svg>
          </span>
@@ -832,7 +860,7 @@ const ankiButtonsHtml =
          </button>
 
          <button id="`+ elShow1Answer +`" class="w-1/3" title="Reveal one character in the answer"><span class="justify-center items-center rounded flex text-primary-contrast bg-secondary-accent border-secondary-accent shadow text-body border min-h-button-min-height px-12 py-8">
-         <span class="text-right">Show 1</span>
+         <span class="text-right">Peek</span>
          <span class="ml-6">
              <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" width="24" height="24" class="undefined"><path d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 0 0 1.48-5.34c-.47-2.78-2.79-5-5.59-5.34a6.505 6.505 0 0 0-7.27 7.27c.34 2.8 2.56 5.12 5.34 5.59a6.5 6.5 0 0 0 5.34-1.48l.27.28v.79l4.25 4.25c.41.41 1.08.41 1.49 0 .41-.41.41-1.08 0-1.49L15.5 14Zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14Z" fill="currentColor"></path></svg>
          </span>
@@ -1846,93 +1874,48 @@ const ankiSettingsButtonHtml =
 
 const ankiSettingsModalHtml =
     `<div class="bp-h-screen fixed inset-0 z-modal" id="` + elSettingsModal + `" style="opacity: 1;">
-        <button aria-label="Close menu" class="anki-settings-close absolute inset-0 z-1 h-full w-full bg-modal-bg opacity-40"></button>
-        <article style="display: inline-table;" class="bp-modal-container bg-secondary-bg">
-            <div class="relative z-1 flex w-full flex-grow flex-col gap-24 p-24 sm:h-full">
-                <article class="grid gap-24 text-secondary-fg sm:grid-cols-2 sm:gap-x-12">
-                    <section class="sm:col-span-2">
-                        <h2 class="mb-8 flex items-center gap-8 font-bold text-primary-fg">
-                           <span>HANKO!</span>
-                           <input type="checkbox" id="` + elToggleOn + `" class="anki-settings-toggles" checked>
-                           <ul class="inline-flex overflow-hidden rounded border border-primary-accent ">
-                              <li class="group">
-                                 <button id='` + elBtnHankoToggleOff +`' class="border-r border-primary-accent px-12 py-6 group-last:border-none text-primary-accent">Hanko Off</button>
-                              </li>
-                             <li class="group">
-                                 <button id='` + elBtnHankoToggleOn +`' class="border-r border-primary-accent px-12 py-6 group-last:border-none text-secondary-bg bg-primary-accent">Hanko On</button>
-                             </li>
-                           </ul>
-                           <ul class="inline-flex overflow-hidden rounded border border-primary-accent ">
-                              <li class="group">
-                                 <button id='` + elBtnToggleOff +`' class="border-r border-primary-accent px-12 py-6 group-last:border-none text-primary-accent">Anki Off</button>
-                              </li>
-                             <li class="group">
-                                 <button id='` + elBtnToggleOn +`' class="border-r border-primary-accent px-12 py-6 group-last:border-none text-secondary-bg bg-primary-accent">Anki On</button>
-                             </li>
-                           </ul>
-                        </h2>
-                        <div class="sm:flex sm:gap-12">
-                            <ul class="grid h-fit gap-8 sm:w-1/2">
-                                <!--<li class="rounded bg-primary-bg px-12 py-8 text-small sm:py-10">
-                                    <div class="flex items-center justify-between">
-                                        <div class="flex items-center justify-center gap-6">
-                                            <p>Auto Next On Unknown</p><svg viewBox="0 0 24 24"
-                                                xmlns="http://www.w3.org/2000/svg" class="h-24 w-24 undefined">
-                                                <path
-                                                    d="m3.4 20.4 17.45-7.48a1 1 0 0 0 0-1.84L3.4 3.6a.993.993 0 0 0-1.39.91L2 9.12c0 .5.37.93.87.99L17 12 2.87 13.88c-.5.07-.87.5-.87 1l.01 4.61c0 .71.73 1.2 1.39.91Z"
-                                                    fill="currentColor"></path>
-                                            </svg>
-                                        </div><input type="checkbox" id="` + elUnknownAutoNext + `" class="anki-settings-toggles" checked>
-                                    </div>
-                                </li>-->
-                                <!--<li class="rounded bg-primary-bg px-12 py-8 text-small sm:py-10">
-                                    <div class="flex items-center justify-between">
-                                        <div class="flex items-center justify-center gap-6">
-                                            <p>Countdown seconds</p>
-                                        </div><select id="` + elUnknownCountdown + `" class="anki-settings-toggles">
-                                            <option value="1">1</option>
-                                            <option value="2">2</option>
-                                            <option value="3" selected>3</option>
-                                            <option value="4">4</option>
-                                            <option value="5">5</option>
-                                        </select>
-                                    </div>
-                                </li>-->
-                            </ul>
-                            <ul class="grid h-fit gap-8 sm:w-1/2">
-                                <!--<li class="rounded bg-primary-bg px-12 py-8 text-small sm:py-10">
-                                    <div class="flex items-center justify-between">
-                                        <div class="flex items-center justify-center gap-6">
-                                            <p>Auto Next On Known</p><svg viewBox="0 0 24 24"
-                                                xmlns="http://www.w3.org/2000/svg" class="h-24 w-24 undefined">
-                                                <path
-                                                    d="m3.4 20.4 17.45-7.48a1 1 0 0 0 0-1.84L3.4 3.6a.993.993 0 0 0-1.39.91L2 9.12c0 .5.37.93.87.99L17 12 2.87 13.88c-.5.07-.87.5-.87 1l.01 4.61c0 .71.73 1.2 1.39.91Z"
-                                                    fill="currentColor"></path>
-                                            </svg>
-                                        </div><input type="checkbox" id="` + elKnownAutoNext + `" class="anki-settings-toggles" checked>
-                                    </div>
-                                </li>-->
-                                <!--<li class="rounded bg-primary-bg px-12 py-8 text-small sm:py-10">
-                                    <div class="flex items-center justify-between">
-                                        <div class="flex items-center justify-center gap-6">
-                                            <p>Countdown seconds</p>
-                                        </div><select id="` + elKnownCountdown + `" class="anki-settings-toggles">
-                                            <option value="1">1</option>
-                                            <option value="2">2</option>
-                                            <option value="3" selected>3</option>
-                                            <option value="4">4</option>
-                                            <option value="5">5</option>
-                                        </select>
-                                    </div>
-                                </li>-->
-                            </ul>
-                        </div>
-                    </section>
-                </article>
-            </div>
-            <footer id="floating-portal-modal-footer" class="sticky bottom-0 left-0 right-0 z-2">
-			<span class="text-center"><p class="order-2 text-detail font-bold text-secondary-fg md:order-1 md:justify-self-start">Bringing Anki goodness into Bunpro goodness</p></span>
-<span class="text-center"><p class="order-2 text-detail font-bold text-secondary-fg md:order-1 md:justify-self-start pad-bt-5">๑(◕‿◕)๑ Michael Cheung 2023 V1.0 ٩(＾◡＾)۶</p></span></footer>
-        </article>
-    </div>
+		<button aria-label="Close menu" class="anki-settings-close absolute inset-0 z-1 h-full w-full bg-modal-bg opacity-40"></button>
+		<article style="display: inline-table;" class="bp-modal-container bg-secondary-bg">
+			<div class="relative z-1 flex w-full flex-grow flex-col gap-24 p-24 sm:h-full">
+				<article class="grid gap-24 text-secondary-fg sm:grid-cols-2 sm:gap-x-12">
+					<section class="sm:col-span-2">
+						<h2 class="mb-8 flex items-center gap-8 font-bold text-primary-fg">
+						<span>HANKO!</span>
+						</h2>
+						<div class="sm:flex sm:gap-12"><span>Reveal 1 character at a time</span></div>
+						<ul class="inline-flex overflow-hidden rounded border border-primary-accent ">
+							<li class="group">
+								<button id='` + elBtnHankoToggleOff +`' class="border-r border-primary-accent px-12 py-6 group-last:border-none text-primary-accent">Off</button>
+							</li>
+							<li class="group">
+								<button id='` + elBtnHankoToggleOn +`' class="border-r border-primary-accent px-12 py-6 group-last:border-none text-secondary-bg bg-primary-accent">On</button>
+							</li>
+						</ul>
+						<h2 class="mb-8 flex items-center gap-8 font-bold text-primary-fg">
+							<span>Anki Buttons</span>
+						</h2>
+						<div class="sm:flex sm:gap-12"><span>Show the full answer then decide whether or not you knew it</span></div>
+						<ul class="inline-flex overflow-hidden rounded border border-primary-accent ">
+							<li class="group">
+								<button id='` + elBtnToggleOff +`' class="border-r border-primary-accent px-12 py-6 group-last:border-none text-primary-accent">Off</button>
+							</li>
+							<li class="group">
+								<button id='` + elBtnToggleOn +`' class="border-r border-primary-accent px-12 py-6 group-last:border-none text-secondary-bg bg-primary-accent">On</button>
+							</li>
+						</ul>
+						<div class="sm:flex sm:gap-12">
+							<ul class="grid h-fit gap-8 sm:w-1/2">
+							</ul>
+							<ul class="grid h-fit gap-8 sm:w-1/2">
+							</ul>
+						</div>
+					</section>
+				</article>
+			</div>
+			<footer id="floating-portal-modal-footer" class="sticky bottom-0 left-0 right-0 z-2">
+				<span class="text-center"><p class="order-2 text-detail font-bold text-secondary-fg md:order-1 md:justify-self-start">Bringing Anki goodness into Bunpro goodness</p></span>
+				<span class="text-center"><p class="order-2 text-detail font-bold text-secondary-fg md:order-1 md:justify-self-start pad-bt-5">๑(◕‿◕)๑ Michael Cheung 2023 V1.0 ٩(＾◡＾)۶</p></span>
+			</footer>
+		</article>
+	</div>
     `;
