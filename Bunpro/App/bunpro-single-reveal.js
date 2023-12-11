@@ -62,6 +62,7 @@ let _hankoEnabled = true;
 let _numCharactersRevealed = 0;
 let _answerRevealed = false;
 let _showAllWasClicked = false;
+let _show1WasClicked = false;
 
 /* -------------------------------------------------------
    Configure keyboard buttons to trigger the UI
@@ -140,7 +141,6 @@ function setupKeyboardTriggers(){
 function resetAnkiQuiz(){
     const quizConsole = document.querySelector('.' + elQuizConsole);
     const showBtn = document.querySelector('#' + elShowAnswer);
-    const show1Btn = document.querySelector('#' + elShow1Answer);
     const knowBtn = document.querySelector('#' + elKnown);
     const unknownBtn = document.querySelector('#' + elUnknown);
     const ankiButtonsSection = document.querySelector('#' + elAnkiButtons);
@@ -156,6 +156,7 @@ function resetAnkiQuiz(){
     }
     enableButtons();
 	_showAllWasClicked = false;
+	_show1WasClicked = false;
 }
 
 /* -------------------------------------------------------
@@ -194,6 +195,7 @@ function setHankoButton(){
 		show1Answer.style.visbility = 'visible';
 		show1Answer.style.opacity = 1.0;
 		show1Answer.enabled = true;
+		_show1WasClicked = false;
 	}
 }
 
@@ -301,27 +303,51 @@ function setUpAnkoUI() {
     const ankoToggleOff = document.querySelector('#' + elBtnToggleOff);
     const ankoToggleOn = document.querySelector('#' + elBtnToggleOn);
     ankoToggleOff.addEventListener('click', function () {
-        ankoToggleOff.classList = 'border-r border-primary-accent px-12 py-6 group-last:border-none text-secondary-bg bg-primary-accent';
-        ankoToggleOn.classList = 'border-r border-primary-accent px-12 py-6 group-last:border-none text-primary-accent';
-		toggleAnko(false);
+		if(_ankoEnabled){
+			ankoToggleOff.classList = 'border-r border-primary-accent px-12 py-6 group-last:border-none text-secondary-bg bg-primary-accent';
+			ankoToggleOn.classList = 'border-r border-primary-accent px-12 py-6 group-last:border-none text-primary-accent';
+			toggleAnko(false);
+		}else{
+			ankoToggleOn.classList = 'border-r border-primary-accent px-12 py-6 group-last:border-none text-secondary-bg bg-primary-accent';
+			ankoToggleOff.classList = 'border-r border-primary-accent px-12 py-6 group-last:border-none text-primary-accent';
+			toggleAnko(true);
+		}
     });
     ankoToggleOn.addEventListener('click', function () {
-        ankoToggleOn.classList = 'border-r border-primary-accent px-12 py-6 group-last:border-none text-secondary-bg bg-primary-accent';
-        ankoToggleOff.classList = 'border-r border-primary-accent px-12 py-6 group-last:border-none text-primary-accent';
-		toggleAnko(true);
+		if(!_ankoEnabled){
+			ankoToggleOn.classList = 'border-r border-primary-accent px-12 py-6 group-last:border-none text-secondary-bg bg-primary-accent';
+			ankoToggleOff.classList = 'border-r border-primary-accent px-12 py-6 group-last:border-none text-primary-accent';
+			toggleAnko(true);
+		}else{
+			ankoToggleOff.classList = 'border-r border-primary-accent px-12 py-6 group-last:border-none text-secondary-bg bg-primary-accent';
+			ankoToggleOn.classList = 'border-r border-primary-accent px-12 py-6 group-last:border-none text-primary-accent';
+			toggleAnko(true);
+		}
     });
 
     const hankoToggleOff = document.querySelector('#' + elBtnHankoToggleOff);
     const hankoToggleOn = document.querySelector('#' + elBtnHankoToggleOn);
     hankoToggleOff.addEventListener('click', function () {
-        hankoToggleOff.classList = 'border-r border-primary-accent px-12 py-6 group-last:border-none text-secondary-bg bg-primary-accent';
-        hankoToggleOn.classList = 'border-r border-primary-accent px-12 py-6 group-last:border-none text-primary-accent';
-		toggleHanko(false);
+		if(_hankoEnabled){
+			hankoToggleOff.classList = 'border-r border-primary-accent px-12 py-6 group-last:border-none text-secondary-bg bg-primary-accent';
+			hankoToggleOn.classList = 'border-r border-primary-accent px-12 py-6 group-last:border-none text-primary-accent';
+			toggleHanko(false);
+		}else{
+			hankoToggleOn.classList = 'border-r border-primary-accent px-12 py-6 group-last:border-none text-secondary-bg bg-primary-accent';
+			hankoToggleOff.classList = 'border-r border-primary-accent px-12 py-6 group-last:border-none text-primary-accent';
+			toggleHanko(true);
+		}
     });
     hankoToggleOn.addEventListener('click', function () {
-        hankoToggleOn.classList = 'border-r border-primary-accent px-12 py-6 group-last:border-none text-secondary-bg bg-primary-accent';
-        hankoToggleOff.classList = 'border-r border-primary-accent px-12 py-6 group-last:border-none text-primary-accent';
-		toggleHanko(true);
+		if(!_hankoEnabled){
+			hankoToggleOn.classList = 'border-r border-primary-accent px-12 py-6 group-last:border-none text-secondary-bg bg-primary-accent';
+			hankoToggleOff.classList = 'border-r border-primary-accent px-12 py-6 group-last:border-none text-primary-accent';
+			toggleHanko(true);
+		}else{
+			hankoToggleOff.classList = 'border-r border-primary-accent px-12 py-6 group-last:border-none text-secondary-bg bg-primary-accent';
+			hankoToggleOn.classList = 'border-r border-primary-accent px-12 py-6 group-last:border-none text-primary-accent';
+			toggleHanko(false);
+		}
     });
 
     /* --------------------------------------------------------
@@ -386,11 +412,24 @@ function setUpAnkoUI() {
         The Anki 'Show answer' button
      * -------------------------------------------------------*/
     const showAnswer = document.querySelector("#" + elShowAnswer);
-	_showAllWasClicked = true;
 
     showAnswer.addEventListener('click', function () {
+		_showAllWasClicked = true;
 
         if(_ankoEnabled) {
+			if(_show1WasClicked){
+				/* ----------------------------------------------------------
+					Set the answer  as blank in the react generated input
+				* -------------------------------------------------------- */
+    			const manualInput = document.querySelector("#" + elManualInput);
+				const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
+					window.HTMLInputElement.prototype,
+					"value"
+				).set;
+				nativeInputValueSetter.call(manualInput, "");
+				const inputEvent = new Event("input", { bubbles: true });
+				manualInput.dispatchEvent(inputEvent);
+			}
           	displayAnswer();
 		}
     }, false);
@@ -402,6 +441,7 @@ function setUpAnkoUI() {
     const manualInput = document.querySelector("#" + elManualInput);
 
     show1Answer.addEventListener('click', function () {
+		_show1WasClicked = true;
 
         if(_hankoEnabled) {
           	display1Answer(_numCharactersRevealed);
@@ -524,7 +564,7 @@ function displayAnswer() {
         quizConsole.style.display = "flex";
         setAnkiQuiz();
         disableButtons();
-    }, 300);
+    }, 1000);
     setTimeout(function () {
         quizConsole.style.display = "flex";
         enableButtons();
@@ -670,17 +710,10 @@ function submitKnown(){
     ankiKnow.style.fontSize = '1.2rem';
 
     /* --------------------------------------------------------
-		Get the quiz answers and sanitise them
+		Get the quiz answer
 	* -------------------------------------------------------*/
-    const quizElement = document.querySelector("#" + elQuizElement);
-    const answers = quizElement.getAttribute('data-meta-answers-array');
-    //const answerDisplay = document.querySelector(".bp-quiz-tense");
 
-    let answer = answers.split(',')[0];
-    answer = answer.replace('"', '');
-    answer = answer.replace('[', '');
-    answer = answer.replace(']', '');
-    answer = answer.replace('"', '');
+    let answer = getAnswer();
 
     setTimeout(function () {
 
@@ -712,9 +745,11 @@ function submitKnown(){
 
 	const submitButton = document.querySelector('.' + elSubmitButton);
     setTimeout(function () {
-        submitButton.click();
+        if(_showAllWasClicked){
+			submitButton.click();
+		}
         ankiKnow.style.fontSize = '1.0rem';
-    }, 200);
+    }, 1000);
 }
 
 function submitUnknown(){
@@ -725,21 +760,21 @@ function submitUnknown(){
     setTimeout(function () {
         showNextButton();
     }, 10);
-	
-	/* ----------------------------------------------------------
-		Set the blank answer in the react generated input
-	* -------------------------------------------------------- */
-    const manualInput = document.querySelector("#" + elManualInput);
-	const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
-		window.HTMLInputElement.prototype,
-		"value"
-	).set;
-	nativeInputValueSetter.call(manualInput, "る");
-	const inputEvent = new Event("input", { bubbles: true });
-	manualInput.dispatchEvent(inputEvent);
 
 	if(_showAllWasClicked){
 		submitButton.click();
+	}else{
+		/* ----------------------------------------------------------
+			Set the blank answer in the react generated input
+		* -------------------------------------------------------- */
+		const manualInput = document.querySelector("#" + elManualInput);
+		const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
+			window.HTMLInputElement.prototype,
+			"value"
+		).set;
+		nativeInputValueSetter.call(manualInput, "る");
+		const inputEvent = new Event("input", { bubbles: true });
+		manualInput.dispatchEvent(inputEvent);
 	}
 
     /* --------------------------------------------------------
@@ -904,112 +939,6 @@ const ankiButtonsHtml =
     </section>`;
 const ankiCountdownHtml =
     `<div class="row text-center" id="` + elNextCountdown + `"></div>`;
-
-const dorayakiSvg = `<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 368 256" enable-background="new 0 0 368 256" xml:space="preserve">
-<path fill="#000000" opacity="1.000000" stroke="none"
-	d="
-M149.281693,232.176270
-	C134.354294,230.709396 120.110901,228.292023 106.702858,222.394196
-	C97.640823,218.408051 89.011154,213.750702 83.220276,205.242462
-	C78.397881,198.157181 78.227768,190.965164 82.806938,183.731781
-	C85.570206,179.366852 85.695236,174.893692 83.024918,170.626678
-	C78.127144,162.800354 78.516678,155.154053 83.391068,147.636703
-	C91.970169,134.405869 104.957031,126.919205 119.214508,121.731850
-	C152.576996,109.593430 184.915985,112.154602 215.870667,129.845428
-	C217.632553,130.852356 219.335327,131.708603 221.460831,131.666382
-	C239.873688,131.300598 257.993683,129.364868 275.131165,121.958717
-	C279.597809,120.028404 283.796356,117.644272 287.370514,114.322670
-	C293.481049,108.643883 294.096008,103.588905 289.397156,96.652367
-	C284.708466,89.730850 278.090363,84.989708 270.970215,80.844353
-	C237.764740,61.512085 190.467575,64.223305 161.039917,87.294182
-	C155.204041,91.869438 150.124069,97.093834 149.104416,105.051460
-	C148.779129,107.590210 147.269333,109.566795 144.363358,108.989227
-	C141.623474,108.444656 140.675842,106.219711 141.016403,103.647179
-	C141.663223,98.761215 143.657288,94.401100 146.636017,90.477066
-	C153.249527,81.764740 161.879318,75.519920 171.686157,71.076454
-	C210.090759,53.675423 247.286041,55.702312 282.858582,78.858047
-	C288.894531,82.787148 293.946899,87.948059 297.437744,94.390724
-	C301.395294,101.694817 301.656616,108.876381 296.923828,116.086792
-	C294.364044,119.986641 294.467377,124.283501 296.812134,128.327347
-	C302.378265,137.926865 301.704529,145.579941 294.442627,153.909927
-	C292.120056,156.574097 289.315247,158.653961 286.440460,160.656052
-	C284.108673,162.280029 281.450378,163.608444 279.416412,160.759628
-	C277.450745,158.006485 279.212006,155.840317 281.648804,154.111969
-	C285.332886,151.498978 288.858063,148.657196 291.018402,144.571014
-	C292.139435,142.450684 293.486511,140.214203 291.537079,137.022446
-	C283.722778,142.554657 275.283630,146.307007 266.343750,148.936829
-	C257.434784,151.557556 248.245529,152.857010 238.751434,154.228714
-	C239.621918,159.073517 238.906128,163.273560 237.455643,167.937607
-	C247.784027,167.709808 257.051544,164.756058 266.303192,161.690140
-	C269.301361,160.696579 273.090942,157.965347 274.856842,162.590408
-	C276.701202,167.420914 272.057861,168.152924 268.899506,169.345657
-	C257.138824,173.786972 244.880371,175.992905 232.423752,177.227188
-	C230.593109,177.408585 228.786835,177.429535 227.168930,178.505951
-	C211.552200,188.896133 193.735291,192.321045 175.589722,194.052383
-	C156.946884,195.831131 138.353455,194.789856 120.043434,190.433365
-	C119.234703,190.240936 118.394844,190.135773 117.620201,189.851669
-	C115.245758,188.980759 113.218803,187.585129 114.158958,184.726959
-	C115.012024,182.133560 117.217468,181.380371 119.842339,182.061676
-	C129.220108,184.495728 138.790192,185.846588 148.429138,186.287643
-	C172.787918,187.402267 196.814026,185.742325 218.846115,173.969009
-	C233.523392,166.125885 234.679489,157.306335 222.720184,145.783310
-	C209.180267,132.737320 192.491989,125.871536 174.041718,123.525444
-	C150.566742,120.540421 128.261826,124.483681 107.633118,136.421127
-	C100.817238,140.365341 94.512192,145.002762 90.306358,151.921173
-	C85.933228,159.114792 86.803978,164.468506 93.248840,169.940689
-	C96.583122,172.771713 100.429420,174.770691 104.351372,176.621140
-	C106.981956,177.862320 109.255913,179.504684 107.864723,182.708176
-	C106.275467,186.367813 103.315331,185.211197 100.635773,183.982697
-	C98.234932,182.881989 95.890762,181.657654 93.246628,180.352097
-	C91.548180,184.754272 94.773376,186.305008 97.267944,187.847214
-	C105.870728,193.165665 115.348038,196.298096 125.228447,198.164536
-	C148.668167,202.592438 172.168488,203.277039 195.681503,198.750885
-	C202.095139,197.516281 208.121155,195.094452 213.862747,191.964462
-	C216.506470,190.523270 219.626190,188.501663 221.662064,192.237595
-	C223.827148,196.210587 220.247070,197.802429 217.501923,199.353989
-	C207.314606,205.111908 196.180634,208.089798 184.674103,208.960403
-	C160.174789,210.814087 135.749329,210.509613 111.947258,203.199890
-	C103.659302,200.654633 95.732208,197.250107 88.557571,191.691956
-	C86.263100,195.944199 88.433899,198.881210 90.425591,201.582138
-	C95.349480,208.259430 102.368889,212.257462 109.885437,215.099792
-	C142.335724,227.370575 174.937332,227.375137 207.493271,215.456390
-	C213.772003,213.157745 219.622559,209.879974 224.664017,205.403534
-	C231.214325,199.587372 232.082245,194.996765 228.147293,187.437576
-	C227.019424,185.270905 226.633377,183.288849 228.791412,181.668320
-	C231.225800,179.840332 233.133743,181.082550 234.827057,183.010483
-	C240.415680,189.373474 240.446915,198.413422 234.791046,206.022125
-	C229.458817,213.195435 222.075867,217.702927 214.123856,221.312180
-	C193.641556,230.608688 171.971954,233.077103 149.281693,232.176270
-M273.737366,131.421280
-	C259.728516,136.815460 244.988342,138.629776 230.030197,139.730896
-	C231.996429,144.984543 235.548996,146.347473 240.193787,145.648102
-	C244.629730,144.980164 249.099945,144.475693 253.490005,143.580185
-	C263.967957,141.442825 274.226440,138.595261 283.260956,132.564072
-	C285.455597,131.099014 288.258972,129.666489 286.480865,125.714050
-	C282.281555,127.627411 278.379120,129.405502 273.737366,131.421280
-z"/>
-<path fill="#000000" opacity="1.000000" stroke="none"
-	d="
-M220.640305,72.227730
-	C235.478912,72.364555 248.936249,76.152374 261.473206,83.265404
-	C263.920959,84.654175 266.180023,86.449120 264.961090,89.583061
-	C263.612915,93.049301 260.950684,92.342552 258.359314,90.881500
-	C249.138702,85.682770 239.398331,81.994820 228.811340,80.817520
-	C226.501785,80.560699 224.179413,80.402634 221.859055,80.264061
-	C219.463211,80.120972 217.557343,79.201050 217.065460,76.717102
-	C216.587967,74.305832 218.188797,73.083771 220.640305,72.227730
-z"/>
-<path fill="#000000" opacity="1.000000" stroke="none"
-	d="
-M156.682907,133.752380
-	C154.313828,129.474640 156.145187,126.937691 160.019943,127.012039
-	C175.089401,127.301216 189.153702,131.401672 201.933929,139.522034
-	C203.782516,140.696594 204.629608,142.572067 203.454788,144.689514
-	C202.223007,146.909576 200.197952,147.660797 197.970306,146.349548
-	C185.999588,139.303299 173.159714,135.333862 159.227386,134.996307
-	C158.466507,134.977875 157.720108,134.361206 156.682907,133.752380
-z"/>
-</svg>`;
 
 const doraemonSvg = `<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 720 496" enable-background="new 0 0 720 496" xml:space="preserve">
 <path fill="#000000" opacity="1.000000" stroke="none"
@@ -1854,11 +1783,9 @@ z"/>
 
 const ankoHeading =
     `<ul id='` + elAnkoheading + `' class="flex items-center gap-4 md:gap-12 anko" title="Bringing anki goodness to your bunpro goodness">` +
-       `<li><span class="anko-svg svg-large">` + dorayakiSvg + `</span></li>` +
        `<li><span class="anko-svg svg-small">` + hankoSvg + `</span></li>` +
        `<li><p class="anko-heading">HANKO!&nbsp&nbsp</p></li>` +
        `<li><span class="anko-svg svg-small">` + hankoSvg + `</span></li>` +
-       `<li><span class="anko-svg svg-large">` + dorayakiSvg + `</span></li>` +
     `</ul>`;
 
 
@@ -1880,9 +1807,8 @@ const ankiSettingsModalHtml =
 				<article class="grid gap-24 text-secondary-fg sm:grid-cols-2 sm:gap-x-12">
 					<section class="sm:col-span-2">
 						<h2 class="mb-8 flex items-center gap-8 font-bold text-primary-fg">
-						<span>HANKO!</span>
+						<span>Peek</span>
 						</h2>
-						<div class="sm:flex sm:gap-12"><span>Reveal 1 character at a time</span></div>
 						<ul class="inline-flex overflow-hidden rounded border border-primary-accent ">
 							<li class="group">
 								<button id='` + elBtnHankoToggleOff +`' class="border-r border-primary-accent px-12 py-6 group-last:border-none text-primary-accent">Off</button>
@@ -1892,9 +1818,8 @@ const ankiSettingsModalHtml =
 							</li>
 						</ul>
 						<h2 class="mb-8 flex items-center gap-8 font-bold text-primary-fg">
-							<span>Anki Buttons</span>
+							<span>Anki</span>
 						</h2>
-						<div class="sm:flex sm:gap-12"><span>Show the full answer then decide whether or not you knew it</span></div>
 						<ul class="inline-flex overflow-hidden rounded border border-primary-accent ">
 							<li class="group">
 								<button id='` + elBtnToggleOff +`' class="border-r border-primary-accent px-12 py-6 group-last:border-none text-primary-accent">Off</button>
@@ -1913,8 +1838,8 @@ const ankiSettingsModalHtml =
 				</article>
 			</div>
 			<footer id="floating-portal-modal-footer" class="sticky bottom-0 left-0 right-0 z-2">
-				<span class="text-center"><p class="order-2 text-detail font-bold text-secondary-fg md:order-1 md:justify-self-start">Bringing Anki goodness into Bunpro goodness</p></span>
-				<span class="text-center"><p class="order-2 text-detail font-bold text-secondary-fg md:order-1 md:justify-self-start pad-bt-5">๑(◕‿◕)๑ Michael Cheung 2023 V1.0 ٩(＾◡＾)۶</p></span>
+				<span class="text-center"><p class="order-2 text-detail font-bold text-secondary-fg md:order-1 md:justify-self-start pad-bt-5">HANKO! V1.0</p></span>
+				<span class="text-center"><p class="order-2 text-detail font-bold text-secondary-fg md:order-1 md:justify-self-start pad-bt-5">๑(◕‿◕)๑ Michael Cheung 2023٩(＾◡＾)۶</p></span>
 			</footer>
 		</article>
 	</div>
